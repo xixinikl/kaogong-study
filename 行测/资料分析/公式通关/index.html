@@ -64,6 +64,29 @@ h3{margin:0 0 8px;font-size:1rem}
 .map .leaf{font-size:.9rem;padding:3px 0 3px 12px;border-left:2px dotted var(--line);margin-left:2px}
 .map .leaf b{color:var(--red);font-weight:600}
 .note{font-size:.8rem;color:var(--muted)}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;position:sticky;top:calc(env(safe-area-inset-top,0px) + 52px);z-index:1;background:var(--bg);padding-block:6px}
+.bar .btn{flex:0 1 auto;padding:8px 12px;min-width:0}
+.timer{font-family:var(--mono);font-variant-numeric:tabular-nums;margin-left:auto;color:var(--muted)}
+.grp{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.grp h3{display:flex;justify-content:space-between;align-items:baseline;color:var(--red);font-family:var(--hand);font-weight:400;font-size:1.35rem;margin:0 0 4px}
+.grp h3 span{font-family:var(--sans);font-size:.75rem;color:var(--muted)}
+.it{display:grid;grid-template-columns:1.8em 1fr auto;gap:4px 8px;padding:9px 0;border-top:1px dashed var(--line);align-items:start}
+.it:first-of-type{border-top:0}
+.it .no{font-family:var(--mono);color:var(--muted);font-size:.8rem;padding-top:2px}
+.it .qq{font-weight:600;min-width:0}
+.it .aa{grid-column:2 / 4;font-family:var(--hand);font-size:1.15rem;line-height:1.5;white-space:pre-line;background:var(--red-soft);border-radius:6px;padding:6px 10px;cursor:pointer}
+.it .aa.hide{color:transparent;background:repeating-linear-gradient(135deg,var(--line) 0 6px,transparent 6px 12px);min-height:2.2em}
+.it .aa.hide::after{content:"点一下看答案";color:var(--muted);font-family:var(--sans);font-size:.75rem}
+.st{border:1px solid var(--line);border-radius:99px;padding:2px 10px;font:inherit;font-size:.8rem;cursor:pointer;background:var(--paper);color:var(--muted);white-space:nowrap}
+.st[data-g="2"]{color:var(--green);border-color:var(--green);background:var(--green-soft)}
+.st[data-g="1"]{color:var(--amber);border-color:var(--amber);background:var(--amber-soft)}
+.st[data-g="0"]{color:var(--red);border-color:var(--red);background:var(--red-soft)}
+.bh{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.bh label{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:.9rem;border:1px solid var(--line);border-radius:8px;padding:4px 8px}
+.bh label.ok{border-color:var(--green);background:var(--green-soft)}
+.bh label.ng{border-color:var(--red);background:var(--red-soft)}
+.bh input{width:4.2em;min-width:0;border:0;border-bottom:1px solid var(--muted);background:transparent;color:var(--ink);font:inherit;padding:2px}
+.bh em{font-style:normal;font-size:.75rem;color:var(--red)}
 .foot{font-size:.78rem;color:var(--muted)}
 @media (prefers-reduced-motion: reduce){.prog i{transition:none}}
 </style>
@@ -82,14 +105,22 @@ h3{margin:0 0 8px;font-size:1rem}
   </header>
 
   <nav role="tablist">
-    <button role="tab" id="tab-drill" aria-selected="true">今日默写</button>
+    <button role="tab" id="tab-drill" aria-selected="true">默写卷</button>
     <button role="tab" id="tab-weak" aria-selected="false">薄弱点</button>
     <button role="tab" id="tab-map" aria-selected="false">思维导图</button>
   </nav>
 
   <section class="panel" id="p-drill">
-    <div class="sheet" id="card"></div>
-    <p class="foot">先在草稿纸上写出答案，再点"看答案"，诚实打分。不会和模糊的明天会再出现，会的间隔越拉越长。</p>
+    <div class="bar">
+      <button class="btn" id="modeAll">全卷</button>
+      <button class="btn" id="modeWeak">只做没掌握的</button>
+      <button class="btn main" id="revealAll">显示全部答案</button>
+      <span class="timer" id="timer">00:00</span>
+    </div>
+    <div id="result"></div>
+    <div id="sheet" class="panel"></div>
+    <div class="row"><button class="btn main" id="submit">交卷</button></div>
+    <p class="foot">纸上写完一整卷，再显示答案。每条默认算"会"，没写对就点它，切换成"模糊""不会"。百化分直接填数字，交卷时自动判。</p>
   </section>
 
   <section class="panel" id="p-weak" hidden>
@@ -183,87 +214,83 @@ const lsSet = (k,v) => { try{ localStorage.setItem(k, JSON.stringify(v)); }catch
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[ch]));
 
-// ---------- 今日队列 ----------
-let queue = [], qi = 0, revealed = false;
-function buildQueue(){
-  const t = today();
-  const doneToday = new Set(todayLog.date===t ? todayLog.results.map(r=>r.id) : []);
-  const due = CARDS.filter(c=>state.cards[c.id] && state.cards[c.id].due<=t && !doneToday.has(c.id))
-    .sort((a,b)=>state.cards[a.id].box-state.cards[b.id].box);
-  const fresh = CARDS.filter(c=>!state.cards[c.id] && !doneToday.has(c.id));
-  // 新卡片按模块轮流取，保证第一天就覆盖各模块（相当于诊断）
-  const byMod = MODS.map(m=>fresh.filter(c=>c.mod===m));
-  const freshMixed=[]; for(let i=0;freshMixed.length<fresh.length;i++) byMod.forEach(l=>{ if(l[i]) freshMixed.push(l[i]); });
-  const doneCount = doneToday.size;
-  queue = due.concat(freshMixed).slice(0, Math.max(0, DAILY - doneCount));
-  qi = 0; revealed = false;
+// ---------- 默写卷 ----------
+let cur = [], mode = "all", revealed = false, t0 = Date.now(), timerId = null, marks = {};
+const GL = ["不会","模糊","会"];
+function sheetCards(){
+  if(mode==="all") return CARDS;
+  const w = CARDS.filter(c=>{ const s=state.cards[c.id]; return !s || s.box<3; });
+  return w.length ? w : CARDS;
 }
-
-function renderCard(){
-  const el = $("card");
-  const t = today();
-  const doneN = todayLog.date===t ? todayLog.results.length : 0;
-  if(qi >= queue.length){
-    const res = todayLog.date===t ? todayLog.results : [];
-    const k = g => res.filter(r=>r.g===g).length;
-    const wrong = res.filter(r=>r.g<2).map(r=>BYID[r.id]).filter(Boolean);
-    el.innerHTML = `<div class="done"><h2>${res.length? "今日默写完成" : "今天没有到期的卡片"}</h2>
-      <p class="hint">共 ${res.length} 张。明天会再出现没记牢的。</p>
-      <div class="chips" style="margin-top:10px"><span class="chip gr">会 ${k(2)}</span><span class="chip a">模糊 ${k(1)}</span><span class="chip r">不会 ${k(0)}</span></div>
-      ${wrong.length? `<h3 style="margin-top:16px">今天要回看的</h3><ul class="weaklist">${wrong.map(c=>`<li><b>${esc(c.mod)}</b> ${esc(c.q)}</li>`).join("")}</ul>`:""}
-      <div class="row"><button class="btn" id="more">再加练 10 张</button></div></div>`;
-    $("more").onclick = ()=>{ extra(); };
-    return;
-  }
-  const c = queue[qi];
-  const total = doneN + (queue.length - qi);
-  const pct = total? Math.round(doneN/total*100):0;
-  const isNum = typeof c.num === "number";
-  el.innerHTML = `<div class="prog"><i style="width:${pct}%"></i></div>
-    <p class="hint" style="margin-top:8px">第 ${doneN+1} / ${total} 张 · <span class="tag">${esc(c.mod)}</span></p>
-    <p class="q">${esc(c.q)}</p>
-    ${isNum ? `<div class="row"><input class="num" id="numIn" inputmode="decimal" placeholder="写百分数，如 14.3" autocomplete="off"><button class="btn main" id="check">核对</button></div>`
-            : `<p class="hint">先在纸上写，写完再看。</p>`}
-    <div id="reveal">${isNum?"":`<div class="row"><button class="btn main" id="show">看答案</button></div>`}</div>`;
-  if(isNum){
-    const go=()=>{ const v=parseFloat(($("numIn").value||"").replace("%","")); const ok=Math.abs(v-c.num)<=0.15; showAnswer(c, ok?2:0, isNaN(v)?"":(ok?"✓ 对了":"✗ 你写的是 "+v)); };
-    $("check").onclick=go; $("numIn").onkeydown=e=>{ if(e.key==="Enter") go(); };
-    $("numIn").focus({preventScroll:true});
-  } else $("show").onclick=()=>showAnswer(c);
+function renderSheet(list){
+  const cs = cur = list || sheetCards(); marks = {}; revealed = false; t0 = Date.now();
+  $("modeAll").classList.toggle("main", mode==="all"); $("modeWeak").classList.toggle("main", mode!=="all");
+  $("revealAll").textContent = "显示全部答案";
+  $("result").innerHTML = "";
+  let n = 0;
+  $("sheet").innerHTML = MODS.map(m=>{
+    const list = cs.filter(c=>c.mod===m); if(!list.length) return "";
+    if(m==="百化分") return `<div class="grp"><h3>${m}<span>${list.length} 个</span></h3><div class="bh">${list.map(c=>`<label id="lb-${c.id}">${esc(c.q.replace(" = ?%",""))} =<input id="in-${c.id}" inputmode="decimal" autocomplete="off">%<em id="em-${c.id}"></em></label>`).join("")}</div></div>`;
+    return `<div class="grp"><h3>${m}<span>${list.length} 条</span></h3>${list.map(c=>{ n++; return `<div class="it"><span class="no">${n}</span><span class="qq">${esc(c.q)}</span><button class="st" id="st-${c.id}" hidden>会</button><div class="aa hide" id="aa-${c.id}">${esc(c.a)}</div></div>`; }).join("")}</div>`;
+  }).join("");
+  cs.filter(c=>typeof c.num!=="number").forEach(c=>{
+    $("aa-"+c.id).onclick = ()=>revealOne(c.id);
+    $("st-"+c.id).onclick = ()=>{ marks[c.id] = ((marks[c.id] ?? 2) + 2) % 3; paint(c.id); };
+  });
+  clearInterval(timerId); timerId = setInterval(tick, 1000); tick();
 }
-
-function showAnswer(c, auto, msg){
-  revealed = true;
-  const r = $("reveal");
-  r.innerHTML = `<div class="ans">${esc(c.a)}${msg?`<small>${esc(msg)}</small>`:""}</div>
-    ${auto===undefined ? `<div class="row"><button class="btn g0" data-g="0">不会</button><button class="btn g1" data-g="1">模糊</button><button class="btn g2" data-g="2">会</button></div>`
-                        : `<div class="row"><button class="btn main" data-g="${auto}">下一张</button></div>`}`;
-  r.querySelectorAll("button[data-g]").forEach(b=>b.onclick=()=>grade(c, +b.dataset.g));
-}
-
-function grade(c, g){
-  const t = today();
-  const s = state.cards[c.id] || {box:0, due:t, seen:0, wrong:0};
-  s.seen++; if(g===0) s.wrong++;
-  s.box = g===0 ? 0 : g===1 ? Math.max(1, Math.min(s.box,2)) : Math.min(5, s.box+1);
-  s.due = addDays(t, g===2 ? GAPS[s.box] : 1);
-  state.cards[c.id] = s;
-  if(todayLog.date!==t) todayLog = {date:t, results:[]};
-  todayLog.results.push({id:c.id, g});
-  if(state.streak.last!==t){
-    state.streak.count = state.streak.last===addDays(t,-1) ? state.streak.count+1 : 1;
-    state.streak.last = t;
-  }
-  qi++; revealed=false;
-  save(); renderStats(); renderCard();
-}
-
-function extra(){
-  const t = today();
-  const done = new Set(todayLog.results.map(r=>r.id));
-  const pool = CARDS.filter(c=>!done.has(c.id)).sort((a,b)=>((state.cards[a.id]||{box:-1}).box)-((state.cards[b.id]||{box:-1}).box));
-  queue = pool.slice(0,10); qi=0; renderCard();
-}
+function tick(){ const s=Math.floor((Date.now()-t0)/1000); $("timer").textContent = String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0"); }
+function paint(id){ const b=$("st-"+id); const g=marks[id] ?? 2; b.dataset.g=g; b.textContent=GL[g]; }
+function revealOne(id){ const a=$("aa-"+id); if(!a.classList.contains("hide")) return; a.classList.remove("hide"); $("st-"+id).hidden=false; if(marks[id]===undefined) marks[id]=2; paint(id); }
+$("revealAll").onclick = ()=>{
+  revealed = !revealed;
+  cur.filter(c=>typeof c.num!=="number").forEach(c=>{
+    if(revealed) revealOne(c.id); else $("aa-"+c.id).classList.add("hide");
+  });
+  $("revealAll").textContent = revealed ? "盖住答案" : "显示全部答案";
+};
+$("modeAll").onclick = ()=>{ mode="all"; renderSheet(); };
+$("modeWeak").onclick = ()=>{ mode="weak"; renderSheet(); };
+$("submit").onclick = ()=>{
+  const t = today(), cs = cur, res = [];
+  cs.forEach(c=>{
+    let g;
+    if(typeof c.num==="number"){
+      const raw=($("in-"+c.id).value||"").replace("%","").trim(); const v=parseFloat(raw);
+      if(!raw) return; // 空着的不计
+      g = Math.abs(v-c.num)<=0.15 ? 2 : 0;
+      $("lb-"+c.id).className = g===2?"ok":"ng"; $("em-"+c.id).textContent = g===2?"":c.a;
+    } else {
+      if($("aa-"+c.id).classList.contains("hide")) return; // 没看答案的不计
+      g = marks[c.id] ?? 2;
+    }
+    res.push({id:c.id, g});
+    const s = state.cards[c.id] || {box:0, due:t, seen:0, wrong:0};
+    s.seen++; if(g===0) s.wrong++;
+    s.box = g===0 ? 0 : g===1 ? Math.max(1, Math.min(s.box,2)) : Math.min(5, s.box+1);
+    s.due = addDays(t, g===2 ? GAPS[s.box] : 1);
+    state.cards[c.id] = s;
+  });
+  if(!res.length){ $("result").innerHTML = `<div class="sheet"><p class="hint" style="margin:0">先显示答案、判一下对错，再交卷。</p></div>`; return; }
+  clearInterval(timerId);
+  const secs = Math.floor((Date.now()-t0)/1000);
+  if(todayLog.date!==t) todayLog = {date:t, results:[], rounds:[]};
+  const prev = new Map((todayLog.results||[]).map(r=>[r.id,r]));
+  res.forEach(r=>prev.set(r.id,r));
+  todayLog.results = [...prev.values()];
+  todayLog.rounds = (todayLog.rounds||[]).concat([{mode, secs, n:res.length, ok:res.filter(r=>r.g===2).length}]);
+  if(state.streak.last!==t){ state.streak.count = state.streak.last===addDays(t,-1) ? state.streak.count+1 : 1; state.streak.last = t; }
+  save(); renderStats();
+  history = [todayLog].concat(history.filter(h=>h.date!==t)); renderHistory();
+  const k = g => res.filter(r=>r.g===g).length;
+  const wrong = res.filter(r=>r.g<2).map(r=>BYID[r.id]);
+  $("result").innerHTML = `<div class="sheet done"><h2>交卷 · ${Math.floor(secs/60)} 分 ${secs%60} 秒</h2>
+    <div class="chips" style="margin-top:8px"><span class="chip gr">会 ${k(2)}</span><span class="chip a">模糊 ${k(1)}</span><span class="chip r">不会 ${k(0)}</span></div>
+    ${wrong.length?`<h3 style="margin-top:14px">要回看的</h3><ul class="weaklist">${wrong.map(c=>`<li><b>${esc(c.mod)}</b> ${esc(c.q)}</li>`).join("")}</ul>
+    <div class="row"><button class="btn main" id="redo">只重做这几条</button></div>`:""}</div>`;
+  if(wrong.length) $("redo").onclick = ()=>{ const ids=new Set(wrong.map(c=>c.id)); renderSheet(CARDS.filter(c=>ids.has(c.id))); window.scrollTo({top:0}); };
+  window.scrollTo({top:0, behavior:"smooth"});
+};
 
 // ---------- 薄弱点 ----------
 function renderStats(){
@@ -330,7 +357,7 @@ show(tabs[h] ? h : "drill");
 // ---------- 启动 ----------
 const ls = lsGet("hs13-state"); if(ls && ls.cards) state = ls;
 const lt = lsGet("hs13-today"); if(lt && lt.date===today()) todayLog = lt;
-buildQueue(); renderStats(); renderCard(); renderHistory();
+renderSheet(); renderStats(); renderHistory();
 $("saveState").textContent = "正在连接记录…";
 
 (async()=>{
@@ -343,7 +370,6 @@ $("saveState").textContent = "正在连接记录…";
     if(ts.exists){ todayLog = JSON.parse(JSON.stringify(ts.data())); }
     const hs = await db.collection("sessions").orderBy("date","desc").limit(30).get();
     history = hs.docs.map(d=>d.data());
-    if(!revealed){ buildQueue(); renderCard(); }
     renderStats(); renderHistory();
     $("saveState").textContent = "已连接，Claude 能看到你的练习记录。";
   }catch(e){ $("saveState").textContent = "暂时连不上记录（"+(e&&e.code||"未知")+"），先存在本机。"; }

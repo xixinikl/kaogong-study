@@ -20,5 +20,5 @@
 
 ## 公式默写页面（「资料公式通关」）
 - 链接：https://claude.ai/artifact/8DK9bGE3kt8J2vuXhQBSA9 ，源文件 `行测/资料分析/公式通关/index.html`
-- 练习记录存在页面的数据库：`srs/state`（每张卡的掌握盒子 box 0–5、错误次数、下次到期日）和 `sessions/<日期>`（当天每张卡的打分：0 不会、1 模糊、2 会）。用 ArtifactData 读取，据此找薄弱模块、安排专项。
+- 练习记录存在页面的数据库：`srs/state`（每张卡的掌握盒子 box 0–5、错误次数、下次到期日）和 `sessions/<日期>`（当天每条的打分：0 不会、1 模糊、2 会；rounds 记每次交卷的用时和对题数）。用 ArtifactData 读取，据此找薄弱模块、安排专项。
 
