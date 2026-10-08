@@ -1,0 +1,351 @@
+<title>资料公式通关</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: one narrow column like a phone-held answer sheet; teacher's red marker = accent, board green = progress */
+:root{
+  --bg:#F3F5F2; --paper:#FFFFFF; --ink:#1C2420; --muted:#5E6A63; --line:#D9DFDA;
+  --red:#C8312B; --red-soft:#F6E3E1; --green:#2E7A52; --green-soft:#DFEFE5; --amber:#A86A12; --amber-soft:#F5EAD4;
+  --hand:"Ma Shan Zheng","Kaiti SC","STKaiti","KaiTi",serif;
+  --sans:"PingFang SC","Hiragino Sans GB","Noto Sans SC","Microsoft YaHei",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#141917; --paper:#1D2421; --ink:#E6ECE8; --muted:#9AA7A0; --line:#2F3934;
+  --red:#F0625A; --red-soft:#3A2220; --green:#5CC28C; --green-soft:#1F3328; --amber:#E0A447; --amber-soft:#3A2F1C; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141917; --paper:#1D2421; --ink:#E6ECE8; --muted:#9AA7A0; --line:#2F3934;
+  --red:#F0625A; --red-soft:#3A2220; --green:#5CC28C; --green-soft:#1F3328; --amber:#E0A447; --amber-soft:#3A2F1C; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.6}
+.wrap{max-width:640px;margin:0 auto;padding-inline:16px;padding-block:16px 48px;display:flex;flex-direction:column;gap:16px}
+header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+h1{font-family:var(--hand);font-weight:400;font-size:2.1rem;line-height:1.1;margin:0;color:var(--red)}
+.sub{color:var(--muted);font-size:.85rem;margin:2px 0 0}
+.stat{display:flex;gap:14px;font-size:.8rem;color:var(--muted)}
+.stat b{display:block;font-family:var(--mono);font-size:1.15rem;color:var(--ink)}
+nav{display:flex;gap:6px;position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);padding-block:6px;z-index:2}
+nav button{flex:1;border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:8px;padding:9px 4px;font:inherit;font-size:.9rem;cursor:pointer}
+nav button[aria-selected="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+.panel{display:flex;flex-direction:column;gap:14px}
+.sheet{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:18px}
+.tag{display:inline-block;font-size:.72rem;letter-spacing:.06em;color:var(--green);background:var(--green-soft);padding:1px 8px;border-radius:99px}
+.prog{height:6px;background:var(--line);border-radius:99px;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--green);width:0;transition:width .3s}
+.q{font-size:1.15rem;font-weight:600;margin:10px 0 0;text-wrap:balance}
+.hint{color:var(--muted);font-size:.85rem;margin:6px 0 0}
+.ans{margin-top:14px;padding:14px;border-radius:8px;background:var(--red-soft);font-family:var(--hand);font-size:1.3rem;line-height:1.55;color:var(--ink);white-space:pre-line}
+.ans small{display:block;font-family:var(--sans);font-size:.8rem;color:var(--muted);margin-top:6px}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.btn{flex:1;min-width:88px;border:1px solid var(--line);border-radius:8px;padding:11px 8px;font:inherit;font-weight:600;cursor:pointer;background:var(--paper);color:var(--ink)}
+.btn.main{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn.g0{border-color:var(--red);color:var(--red)}
+.btn.g1{border-color:var(--amber);color:var(--amber)}
+.btn.g2{border-color:var(--green);color:var(--green)}
+input.num{flex:2;min-width:120px;border:1px solid var(--line);border-radius:8px;padding:10px;font-family:var(--mono);font-size:1.1rem;background:var(--bg);color:var(--ink)}
+.done h2{font-family:var(--hand);font-weight:400;color:var(--red);font-size:1.8rem;margin:0}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{font-size:.85rem;padding:3px 10px;border-radius:99px;border:1px solid var(--line)}
+.chip.r{color:var(--red);border-color:var(--red)} .chip.a{color:var(--amber);border-color:var(--amber)} .chip.gr{color:var(--green);border-color:var(--green)}
+.mods{display:flex;flex-direction:column;gap:10px}
+.mod{display:grid;grid-template-columns:5.5em 1fr 3.2em;gap:10px;align-items:center;font-size:.9rem}
+.mod .prog{height:10px}
+.mod .pct{font-family:var(--mono);text-align:right;font-variant-numeric:tabular-nums}
+.mod.weak .prog i{background:var(--red)}
+ul.weaklist{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:4px}
+h3{margin:0 0 8px;font-size:1rem}
+/* mind map */
+.map details{border-left:2px solid var(--line);padding-left:12px;margin:4px 0}
+.map > details{border-left:3px solid var(--red);background:var(--paper);border-radius:0 8px 8px 0;padding:8px 12px;margin:0 0 8px}
+.map summary{cursor:pointer;font-weight:600;list-style:none}
+.map summary::before{content:"▸ ";color:var(--red)}
+.map details[open]>summary::before{content:"▾ "}
+.map .leaf{font-size:.9rem;padding:3px 0 3px 12px;border-left:2px dotted var(--line);margin-left:2px}
+.map .leaf b{color:var(--red);font-weight:600}
+.note{font-size:.8rem;color:var(--muted)}
+.foot{font-size:.78rem;color:var(--muted)}
+@media (prefers-reduced-motion: reduce){.prog i{transition:none}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>资料公式通关</h1>
+      <p class="sub">花生十三体系 · A 基期 B 现期 · 每天一遍</p>
+    </div>
+    <div class="stat">
+      <span><b id="sStreak">0</b>连续天数</span>
+      <span><b id="sMaster">0</b>已熟练</span>
+      <span><b id="sTotal">0</b>总卡片</span>
+    </div>
+  </header>
+
+  <nav role="tablist">
+    <button role="tab" id="tab-drill" aria-selected="true">今日默写</button>
+    <button role="tab" id="tab-weak" aria-selected="false">薄弱点</button>
+    <button role="tab" id="tab-map" aria-selected="false">思维导图</button>
+  </nav>
+
+  <section class="panel" id="p-drill">
+    <div class="sheet" id="card"></div>
+    <p class="foot">先在草稿纸上写出答案，再点"看答案"，诚实打分。不会和模糊的明天会再出现，会的间隔越拉越长。</p>
+  </section>
+
+  <section class="panel" id="p-weak" hidden>
+    <div class="sheet">
+      <h3>各模块掌握度</h3>
+      <div class="mods" id="mods"></div>
+      <p class="note" style="margin:10px 0 0">没练过的卡片按 0 计。红色是低于 50% 的模块，先专项补它。</p>
+    </div>
+    <div class="sheet">
+      <h3>最常卡住的卡片</h3>
+      <ul class="weaklist" id="weakCards"></ul>
+    </div>
+    <div class="sheet">
+      <h3>最近练习</h3>
+      <div id="history" class="chips"></div>
+    </div>
+  </section>
+
+  <section class="panel map" id="p-map" hidden></section>
+
+  <p class="foot" id="saveState">记录保存中…</p>
+</div>
+
+<script>
+// ---------- 卡片库（字母：A 基期，B 现期） ----------
+const MODS = ["识别","速算","百化分","除法转换","ABRX","比重","盐水","比较","平均倍数","年均"];
+const C = [
+ ["id1","识别","资料题型识别的三要素？","时间 + 主体 + 问题\n主体→单一数/比值/乘积/加减\n问题→问 R 还是 X"],
+ ["id2","识别","老师的 A、B、R、X 各是什么？","A 基期，B 现期\nR 增长率，X 增长量"],
+ ["s1","速算","尾数法什么时候用？","精确求和/求差，且选项最后一两位不同"],
+ ["s2","速算","高位叠加怎么做？适合什么问法？","从高位加起，末尾凑整\n适合问\"在哪个范围\"的求和"],
+ ["s3","速算","乘法拆分里的\"一个包子\"指什么？举两个拆法","1%\n55%=50%+5%，95%=1−5%，27.5%=25%+2.5%"],
+ ["s4","速算","除法拆分法的三种拆法？","分子在分母 50% 附近→先拆 50%\n分数≈1→先拆 100%\n分子很小→拆 10%/5%/1%"],
+ ["s5","速算","等比放缩用在哪两种情况？","① 分母接近整百\n② 两个分数加减乘除（把分母变一样）"],
+ ["b3","百化分","1/3 = ?%","33.3",33.3],["b6","百化分","1/6 = ?%","16.7",16.7],["b7","百化分","1/7 = ?%","14.3",14.3],
+ ["b8","百化分","1/8 = ?%","12.5",12.5],["b9","百化分","1/9 = ?%","11.1",11.1],["b11","百化分","1/11 = ?%","9.1",9.1],
+ ["b12","百化分","1/12 = ?%","8.3",8.3],["b13","百化分","1/13 = ?%","7.7",7.7],["b14","百化分","1/14 = ?%","7.1",7.1],
+ ["b15","百化分","1/15 = ?%","6.7",6.7],["b16","百化分","1/16 = ?%","6.25",6.25],["b17","百化分","1/17 = ?%","5.9",5.9],
+ ["b18","百化分","1/18 = ?%","5.6",5.6],["b19","百化分","1/19 = ?%","5.3",5.3],["b27","百化分","2/7 = ?%","28.6",28.6],["b37","百化分","3/7 = ?%","42.9",42.9],
+ ["d1","除法转换","化除为乘：适用范围？r修怎么算？","R 在 [−10%, 0] 最好用，[0,10%] 也行\n下降：r修 = r + r²\n增长：r修 = r − r²\n|X| ≈ B × r修"],
+ ["d2","除法转换","假设分配：适用范围 + 核心公式？","R 在 [0, 25%]，基期能估到整百附近\n核心 X = AR"],
+ ["d3","除法转换","415 份数法的 4、1、5 分别是什么？","R=25%=1/4 时\n基期 4 份、增量 1 份、现期 5 份\n一般：R=1/n → n : 1 : n+1"],
+ ["d4","除法转换","选项极近时怎么办？","假设见代入：在两个最近选项中间取好算的 x'\nA' = B − x'，验 A'×R 偏大还是偏小"],
+ ["d5","除法转换","怎么判断能不能用假设分配？","数据去掉后两位保留三位\n选项差距远大于 1～2 才能用"],
+ ["d6","除法转换","R = −20%，用 415：基期、增量、现期各几份？","基期 5 份，增量 −1 份，现期 4 份"],
+ ["a1","ABRX","增长量 X 的两个公式？","X = AR = BR/(1+R)"],
+ ["a2","ABRX","基期 A 的两个公式？","A = B − X = B/(1+R)"],
+ ["a3","ABRX","间隔增长率公式？使用前提？","R = R1 + R2 + R1R2\n必须是三个连续时间点"],
+ ["a4","ABRX","间隔增长率逆运用：已知 R、R2 求 R1？","R1 = (R − R2)/(1+R2)\nR2>0 时 |R1| < |R−R2|"],
+ ["a5","ABRX","比值增长率公式（A=B/C 型）？","R = (R1 − R2)/(1 + R2)\nR1 分子增速，R2 分母增速"],
+ ["a6","ABRX","乘积增长率公式 + 两句识别口诀？","R = R1 + R2 + R1R2\n有占比想乘积，有日均想乘积"],
+ ["a7","ABRX","已知\"增加 X、提高 R%\"，求基期？","A = X / R"],
+ ["a8","ABRX","求后期的三种假设？","① X 每年相同：B + nX\n② R 每年相同：一年一年推 B + BR\n③ 按实际增速（名义 − 价格因素）"],
+ ["p1","比重","基期比重公式？","现期比重 × (1+R整)/(1+R部)"],
+ ["p2","比重","比重升降怎么判断？","R部 > R整 → 比重上升\nR部 < R整 → 比重下降"],
+ ["p3","比重","比重差公式 + 口诀？","a/B × (R1 − R2)\n今年的整体分之去年的部分，乘上增长率之差"],
+ ["p4","比重","比重差的秒杀结论？","|比重差| < |R1 − R2|"],
+ ["p5","比重","隔级比重：什么时候乘、什么时候除？","小比大用乘法，小比中用除法"],
+ ["y1","盐水","盐水题怎么识别？","A = B/C，且 B、C 都能拆成两部分相加\n时间型（全年=上半年+下半年）或构成型（进出口=进口+出口）"],
+ ["y2","盐水","混合增长率定性结论？","在中间、不在正中间，靠近量（基期）大的一边"],
+ ["y3","盐水","三 R 排序关系？","R1 > R ⇔ R > R2 ⇔ R1 > R2"],
+ ["y4","盐水","十字交叉求出的是什么量之比？","基期量之比"],
+ ["c1","比较","趋势法判断分数变大的条件？","分子增速 > 分母增速 → 分数变大"],
+ ["c2","比较","增量比较的两条秒杀？","大大则大（B 大 R 大 → X 大）\n一大一小看倍数"],
+ ["c3","比较","姚潘理论（追及思想）怎么用？","现期大的叫姚、小的叫潘，看谁的 X 大\n姚 X 大 → 差距拉大 → 基期差 < 现期差\n潘 X 大 → 差距缩小 → 基期差 > 现期差"],
+ ["c4","比较","\"增量最大\"和\"变化量最大\"的区别？","增量最大：正 > 负\n变化量最大：比绝对值"],
+ ["c5","比较","五种替代比较？","① 末/基 替代年均 R\n② B/A 替代 R\n③ X/B 替代 X/A\n④ A/非A 替代 A/整体\n⑤ 图形高度替代数值"],
+ ["c6","比较","\"王者荣耀\"法是做什么的？","用盐水思想拆分子分母\n判断分数是否超过某个数（如 50%、1/3）"],
+ ["m1","平均倍数","(A/B) ÷ (C/D) = ? 口诀？","AD / BC，两边除中间"],
+ ["m2","平均倍数","平均数增长率公式？","(R1 − R2)/(1 + R2)"],
+ ["m3","平均倍数","\"是多少倍\"和\"多多少倍\"？","是多少倍 = A/B = 1 + R\n多多少倍 = A/B − 1"],
+ ["m4","平均倍数","翻 n 番是多少倍？","2ⁿ 倍"],
+ ["m5","平均倍数","平均数之差能用比重差的秒杀吗？","不能秒杀，要算 a/B × (R1 − R2)"],
+ ["n1","年均","\"十四五\"年均增长量怎么算？","(2025 − 2020)/5，基期要往前推"],
+ ["n2","年均","图表只有 2021～2025，问年均增长量？","推不了：(2025 − 2021)/4"],
+ ["n3","年均","年均增长率公式 + 估算法偏大还是偏小？","末/基 = (1+r)ⁿ\n末/基 ≈ 1 + nr（r 很小），结果偏大"],
+ ["n4","年均","要背的四个数：1.05⁴、1.1⁴、1.15⁴、1.2⁴？","1.216、1.46、1.75、2.07"],
+];
+const CARDS = C.map(([id,mod,q,a,num])=>({id,mod,q,a,num}));
+const BYID = Object.fromEntries(CARDS.map(c=>[c.id,c]));
+const DAILY = 15, GAPS=[1,1,2,4,7,15];
+
+// ---------- 状态 ----------
+let state = {cards:{}, streak:{last:"",count:0}};
+let todayLog = {date:"", results:[]};
+let db = null;
+const today = () => { const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); };
+const addDays = (s,n) => { const [y,m,d]=s.split("-").map(Number); const t=new Date(y,m-1,d+n); return t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0"); };
+const lsGet = k => { try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } };
+const lsSet = (k,v) => { try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} };
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[ch]));
+
+// ---------- 今日队列 ----------
+let queue = [], qi = 0, revealed = false;
+function buildQueue(){
+  const t = today();
+  const doneToday = new Set(todayLog.date===t ? todayLog.results.map(r=>r.id) : []);
+  const due = CARDS.filter(c=>state.cards[c.id] && state.cards[c.id].due<=t && !doneToday.has(c.id))
+    .sort((a,b)=>state.cards[a.id].box-state.cards[b.id].box);
+  const fresh = CARDS.filter(c=>!state.cards[c.id] && !doneToday.has(c.id));
+  // 新卡片按模块轮流取，保证第一天就覆盖各模块（相当于诊断）
+  const byMod = MODS.map(m=>fresh.filter(c=>c.mod===m));
+  const freshMixed=[]; for(let i=0;freshMixed.length<fresh.length;i++) byMod.forEach(l=>{ if(l[i]) freshMixed.push(l[i]); });
+  const doneCount = doneToday.size;
+  queue = due.concat(freshMixed).slice(0, Math.max(0, DAILY - doneCount));
+  qi = 0; revealed = false;
+}
+
+function renderCard(){
+  const el = $("card");
+  const t = today();
+  const doneN = todayLog.date===t ? todayLog.results.length : 0;
+  if(qi >= queue.length){
+    const res = todayLog.date===t ? todayLog.results : [];
+    const k = g => res.filter(r=>r.g===g).length;
+    const wrong = res.filter(r=>r.g<2).map(r=>BYID[r.id]).filter(Boolean);
+    el.innerHTML = `<div class="done"><h2>${res.length? "今日默写完成" : "今天没有到期的卡片"}</h2>
+      <p class="hint">共 ${res.length} 张。明天会再出现没记牢的。</p>
+      <div class="chips" style="margin-top:10px"><span class="chip gr">会 ${k(2)}</span><span class="chip a">模糊 ${k(1)}</span><span class="chip r">不会 ${k(0)}</span></div>
+      ${wrong.length? `<h3 style="margin-top:16px">今天要回看的</h3><ul class="weaklist">${wrong.map(c=>`<li><b>${esc(c.mod)}</b> ${esc(c.q)}</li>`).join("")}</ul>`:""}
+      <div class="row"><button class="btn" id="more">再加练 10 张</button></div></div>`;
+    $("more").onclick = ()=>{ extra(); };
+    return;
+  }
+  const c = queue[qi];
+  const total = doneN + (queue.length - qi);
+  const pct = total? Math.round(doneN/total*100):0;
+  const isNum = typeof c.num === "number";
+  el.innerHTML = `<div class="prog"><i style="width:${pct}%"></i></div>
+    <p class="hint" style="margin-top:8px">第 ${doneN+1} / ${total} 张 · <span class="tag">${esc(c.mod)}</span></p>
+    <p class="q">${esc(c.q)}</p>
+    ${isNum ? `<div class="row"><input class="num" id="numIn" inputmode="decimal" placeholder="写百分数，如 14.3" autocomplete="off"><button class="btn main" id="check">核对</button></div>`
+            : `<p class="hint">先在纸上写，写完再看。</p>`}
+    <div id="reveal">${isNum?"":`<div class="row"><button class="btn main" id="show">看答案</button></div>`}</div>`;
+  if(isNum){
+    const go=()=>{ const v=parseFloat(($("numIn").value||"").replace("%","")); const ok=Math.abs(v-c.num)<=0.15; showAnswer(c, ok?2:0, isNaN(v)?"":(ok?"✓ 对了":"✗ 你写的是 "+v)); };
+    $("check").onclick=go; $("numIn").onkeydown=e=>{ if(e.key==="Enter") go(); };
+    $("numIn").focus({preventScroll:true});
+  } else $("show").onclick=()=>showAnswer(c);
+}
+
+function showAnswer(c, auto, msg){
+  revealed = true;
+  const r = $("reveal");
+  r.innerHTML = `<div class="ans">${esc(c.a)}${msg?`<small>${esc(msg)}</small>`:""}</div>
+    ${auto===undefined ? `<div class="row"><button class="btn g0" data-g="0">不会</button><button class="btn g1" data-g="1">模糊</button><button class="btn g2" data-g="2">会</button></div>`
+                        : `<div class="row"><button class="btn main" data-g="${auto}">下一张</button></div>`}`;
+  r.querySelectorAll("button[data-g]").forEach(b=>b.onclick=()=>grade(c, +b.dataset.g));
+}
+
+function grade(c, g){
+  const t = today();
+  const s = state.cards[c.id] || {box:0, due:t, seen:0, wrong:0};
+  s.seen++; if(g===0) s.wrong++;
+  s.box = g===0 ? 0 : g===1 ? Math.max(1, Math.min(s.box,2)) : Math.min(5, s.box+1);
+  s.due = addDays(t, g===2 ? GAPS[s.box] : 1);
+  state.cards[c.id] = s;
+  if(todayLog.date!==t) todayLog = {date:t, results:[]};
+  todayLog.results.push({id:c.id, g});
+  if(state.streak.last!==t){
+    state.streak.count = state.streak.last===addDays(t,-1) ? state.streak.count+1 : 1;
+    state.streak.last = t;
+  }
+  qi++; revealed=false;
+  save(); renderStats(); renderCard();
+}
+
+function extra(){
+  const t = today();
+  const done = new Set(todayLog.results.map(r=>r.id));
+  const pool = CARDS.filter(c=>!done.has(c.id)).sort((a,b)=>((state.cards[a.id]||{box:-1}).box)-((state.cards[b.id]||{box:-1}).box));
+  queue = pool.slice(0,10); qi=0; renderCard();
+}
+
+// ---------- 薄弱点 ----------
+function renderStats(){
+  const vals = Object.values(state.cards);
+  $("sStreak").textContent = state.streak.count||0;
+  $("sMaster").textContent = vals.filter(s=>s.box>=3).length;
+  $("sTotal").textContent = CARDS.length;
+  $("mods").innerHTML = MODS.map(m=>{
+    const cs = CARDS.filter(c=>c.mod===m);
+    const p = Math.round(cs.reduce((a,c)=>a+((state.cards[c.id]||{box:0}).box/5),0)/cs.length*100);
+    const tried = cs.some(c=>state.cards[c.id]);
+    return `<div class="mod ${tried&&p<50?"weak":""}"><span>${m}</span><div class="prog"><i style="width:${p}%"></i></div><span class="pct">${tried?p+"%":"未练"}</span></div>`;
+  }).join("");
+  const weak = CARDS.filter(c=>(state.cards[c.id]||{}).wrong>0).sort((a,b)=>state.cards[b.id].wrong-state.cards[a.id].wrong).slice(0,8);
+  $("weakCards").innerHTML = weak.length ? weak.map(c=>`<li><b>${esc(c.mod)}</b> ${esc(c.q)} <span class="note">错 ${state.cards[c.id].wrong} 次</span></li>`).join("") : `<li class="note" style="list-style:none;margin-left:-1.2em">还没有记录。做完第一轮默写，这里会列出最常卡住的卡片。</li>`;
+}
+let history = [];
+function renderHistory(){
+  $("history").innerHTML = history.length ? history.slice(0,14).map(h=>{
+    const r=h.results||[]; const ok=r.filter(x=>x.g===2).length;
+    return `<span class="chip">${esc(h.date.slice(5))} · ${ok}/${r.length}</span>`;
+  }).join("") : `<span class="note">还没有练习记录。</span>`;
+}
+
+// ---------- 保存（db 优先，本机兜底） ----------
+let saving = Promise.resolve();
+function save(){
+  lsSet("hs13-state", state); lsSet("hs13-today", todayLog);
+  if(!db){ $("saveState").textContent = "记录只存在这台设备上。"; return; }
+  const s = JSON.parse(JSON.stringify(state)), l = JSON.parse(JSON.stringify(todayLog));
+  saving = saving.then(async()=>{
+    try{
+      await db.doc("srs/state").set(s);
+      await db.collection("sessions").doc(l.date).set(l);
+      $("saveState").textContent = "已保存，Claude 能看到你的练习记录。";
+    }catch(e){ $("saveState").textContent = "这次没存上（"+(e&&e.code||"未知")+"），本机已保留。"; }
+  });
+}
+
+// ---------- 思维导图 ----------
+const MAP = [
+ ["一、识别题型",[["时间 + 主体 + 问题",["时间：现期 / 基期 / 间隔 / 年均","主体：单一数 / 比值 / 乘积 / 加减（盐水）","问题：问 <b>R</b> 还是问 <b>X</b>"]],["字母",["<b>A 基期</b>　<b>B 现期</b>　R = X/A　X = AR = BR/(1+R)"]]]],
+ ["二、速算",[["加减",["尾数法：选项尾数不同","高位叠加：问范围","减法分段"]],["乘法",["小分互换：×25% = ÷4","拆分：一个包子 = 1%"]],["除法",["拆分法：拆 50% / 100% / 10%","等比放缩：分母凑整百"]]]],
+ ["三、除法转换（求 A、X）",[["化除为乘 [−10%,10%]",["下降 r修 = r + r²","增长 r修 = r − r²","|X| ≈ B × r修"]],["假设分配 [0,25%]",["X = AR","先判断：截三位后选项差距 ≫ 1～2"]],["415 份数",["R = 1/n → n : 1 : n+1"]],["选项极近",["假设见代入"]]]],
+ ["四、ABRX",[["求 A",["一般基期","间隔基期：先求间隔 R","基期和差：两次求基期","A = X/R"]],["求 B（后期）",["X 相同：B + nX","R 相同：逐年推","实际增速"]],["求 X",["一般 X","两期增量之比","X = X1 + X2 + …"]],["求 R",["一般 R = X/A","间隔 R1 + R2 + R1R2","比值 (R1 − R2)/(1+R2)","乘积 R1 + R2 + R1R2：有占比、有日均想乘积"]]]],
+ ["五、比重",[["现期比重",["部分 / 整体","饼图：1/2、1/4、1/3、1/8"]],["基期比重",["现期比重 × (1+R整)/(1+R部)"]],["升降",["R部 > R整 → ↑"]],["比重差",["a/B × (R1 − R2)","|比重差| < |R1 − R2|"]],["隔级比重",["小比大用乘，小比中用除"]]]],
+ ["六、盐水",[["识别",["A = B/C，两部分相加"]],["三 R 排序",["R1 > R ⇔ R > R2 ⇔ R1 > R2"]],["求第三 R",["定性：靠近量大的一边","定量：线段法"]],["求量之比",["十字交叉（基期量之比）"]]]],
+ ["七、比较",[["比值比较",["趋势法","双线法","放缩、拆分","王者荣耀法"]],["增量比较",["大大则大","一大一小看倍数","增量最大：正 > 负；变化量：比绝对值"]],["差值变化",["姚潘理论（追及思想）：看谁的 X 大"]],["替代比较",["末/基、B/A、X/B、A/非A、图形高度"]]]],
+ ["八、平均数 · 倍数",[["平均数",["两边除中间：AD/BC","基期平均数同基期比重","增长率 (R1 − R2)/(1+R2)","平均数之差不能秒杀"]],["倍数",["是几倍 = A/B = 1+R","多几倍 = A/B − 1","翻 n 番 = 2ⁿ 倍"]]]],
+ ["九、年均",[["年均增长量",["(末 − 基)/n","十四五：(2025 − 2020)/5","推不了：(2025 − 2021)/4"]],["年均增长率",["末/基 = (1+r)ⁿ","≈ 1 + nr（偏大）","1.05⁴≈1.216　1.1⁴≈1.46　1.15⁴≈1.75　1.2⁴≈2.07"]]]],
+];
+$("p-map").innerHTML = `<p class="note">点开每个分支。整体顺序 = 老师 7月4日总结。</p>` + MAP.map(([t,kids],i)=>`<details ${i===0?"open":""}><summary>${t}</summary>${kids.map(([k,leaves])=>`<details><summary>${k}</summary>${leaves.map(l=>`<div class="leaf">${l}</div>`).join("")}</details>`).join("")}</details>`).join("");
+
+// ---------- 标签页 ----------
+const tabs = {drill:"p-drill", weak:"p-weak", map:"p-map"};
+function show(name){
+  Object.entries(tabs).forEach(([k,p])=>{ $("tab-"+k).setAttribute("aria-selected", k===name); $(p).hidden = k!==name; });
+  try{ localStorage.setItem("hs13-tab", name); }catch(e){}
+}
+Object.keys(tabs).forEach(k=>$("tab-"+k).onclick=()=>show(k));
+const h = (location.hash||"").slice(1);
+show(tabs[h] ? h : "drill");
+
+// ---------- 启动 ----------
+const ls = lsGet("hs13-state"); if(ls && ls.cards) state = ls;
+const lt = lsGet("hs13-today"); if(lt && lt.date===today()) todayLog = lt;
+buildQueue(); renderStats(); renderCard(); renderHistory();
+$("saveState").textContent = "正在连接记录…";
+
+(async()=>{
+  try{ db = window.claude ? await window.claude.use("db") : null; }catch(e){ db=null; }
+  if(!db){ $("saveState").textContent = "记录只存在这台设备上。"; return; }
+  try{
+    const snap = await db.doc("srs/state").get();
+    if(snap.exists){ const d = snap.data(); if(d && d.cards) state = JSON.parse(JSON.stringify(d)); }
+    const ts = await db.collection("sessions").doc(today()).get();
+    if(ts.exists){ todayLog = JSON.parse(JSON.stringify(ts.data())); }
+    const hs = await db.collection("sessions").orderBy("date","desc").limit(30).get();
+    history = hs.docs.map(d=>d.data());
+    if(!revealed){ buildQueue(); renderCard(); }
+    renderStats(); renderHistory();
+    $("saveState").textContent = "已连接，Claude 能看到你的练习记录。";
+  }catch(e){ $("saveState").textContent = "暂时连不上记录（"+(e&&e.code||"未知")+"），先存在本机。"; }
+})();
+</script>
