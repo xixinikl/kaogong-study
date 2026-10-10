@@ -27,6 +27,7 @@
 
 ## 我的工具页面
 - **网页错题本**：https://claude.ai/artifact/LLPXS8MGXPQb5945UP1M5S （数据在页面数据库 `mistakes`，复盘后用 ArtifactData 追加，字段：set/page/no/cat/my/ans/type/cause/fix/done/date）
+  - 同一页面的「知识卡」tab：数据库 `cards`，字段 kind（trap 易错坑点 / speed 提速技巧 / spot 题型识别 / tool 基础工具）、star（0–2）、title、how、src、order、date。复盘学到新东西时同时追加到这里和 `错题本.md` 的知识卡对应分类。
 - **逐题计时器**：https://claude.ai/artifact/7G9W5q4BWUA2EuYGgTQuJd （做一篇时每题点一下，结果我会复制发你）
 - **百化分默写**：https://claude.ai/artifact/6btRtAmUmER4ajckSjPxBX
 
