@@ -112,6 +112,7 @@ h3{margin:0 0 8px;font-size:1rem}
 
   <section class="panel" id="p-drill">
     <div class="bar">
+      <button class="btn" id="modeDue">今天到期</button>
       <button class="btn" id="modeAll">全卷</button>
       <button class="btn" id="modeWeak">只做没掌握的</button>
       <button class="btn main" id="revealAll">显示全部答案</button>
@@ -215,16 +216,19 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[ch]));
 
 // ---------- 默写卷 ----------
-let cur = [], mode = "all", revealed = false, t0 = Date.now(), timerId = null, marks = {};
+let cur = [], mode = "due", revealed = false, t0 = Date.now(), timerId = null, marks = {};
 const GL = ["不会","模糊","会"];
+const dueCards = () => { const t=today(); return CARDS.filter(c=>{ const s=state.cards[c.id]; return !s || s.due<=t; }); };
 function sheetCards(){
   if(mode==="all") return CARDS;
+  if(mode==="due") return dueCards();
   const w = CARDS.filter(c=>{ const s=state.cards[c.id]; return !s || s.box<3; });
   return w.length ? w : CARDS;
 }
 function renderSheet(list){
   const cs = cur = list || sheetCards(); marks = {}; revealed = false; t0 = Date.now();
-  $("modeAll").classList.toggle("main", mode==="all"); $("modeWeak").classList.toggle("main", mode!=="all");
+  $("modeAll").classList.toggle("main", mode==="all"); $("modeWeak").classList.toggle("main", mode==="weak"); $("modeDue").classList.toggle("main", mode==="due");
+  $("modeDue").textContent = "今天到期（" + dueCards().length + "）";
   $("revealAll").textContent = "显示全部答案";
   $("result").innerHTML = "";
   let n = 0;
@@ -232,7 +236,7 @@ function renderSheet(list){
     const list = cs.filter(c=>c.mod===m); if(!list.length) return "";
     if(m==="百化分") return `<div class="grp"><h3>${m}<span>${list.length} 个</span></h3><div class="bh">${list.map(c=>`<label id="lb-${c.id}">${esc(c.q.replace(" = ?%",""))} =<input id="in-${c.id}" inputmode="decimal" autocomplete="off">%<em id="em-${c.id}"></em></label>`).join("")}</div></div>`;
     return `<div class="grp"><h3>${m}<span>${list.length} 条</span></h3>${list.map(c=>{ n++; return `<div class="it"><span class="no">${n}</span><span class="qq">${esc(c.q)}</span><button class="st" id="st-${c.id}" hidden>会</button><div class="aa hide" id="aa-${c.id}">${esc(c.a)}</div></div>`; }).join("")}</div>`;
-  }).join("");
+  }).join("") || `<div class="sheet"><p class="hint" style="margin:0">今天没有到期的卡，全部按时复习过了。想多练可以点"全卷"。</p></div>`;
   cs.filter(c=>typeof c.num!=="number").forEach(c=>{
     $("aa-"+c.id).onclick = ()=>revealOne(c.id);
     $("st-"+c.id).onclick = ()=>{ marks[c.id] = ((marks[c.id] ?? 2) + 2) % 3; paint(c.id); };
@@ -249,6 +253,7 @@ $("revealAll").onclick = ()=>{
   });
   $("revealAll").textContent = revealed ? "盖住答案" : "显示全部答案";
 };
+$("modeDue").onclick = ()=>{ mode="due"; renderSheet(); };
 $("modeAll").onclick = ()=>{ mode="all"; renderSheet(); };
 $("modeWeak").onclick = ()=>{ mode="weak"; renderSheet(); };
 $("submit").onclick = ()=>{
@@ -371,6 +376,7 @@ $("saveState").textContent = "正在连接记录…";
     const hs = await db.collection("sessions").orderBy("date","desc").limit(30).get();
     history = hs.docs.map(d=>d.data());
     renderStats(); renderHistory();
+    if(!revealed && !Object.keys(marks).length) renderSheet();
     $("saveState").textContent = "已连接，Claude 能看到你的练习记录。";
   }catch(e){ $("saveState").textContent = "暂时连不上记录（"+(e&&e.code||"未知")+"），先存在本机。"; }
 })();
